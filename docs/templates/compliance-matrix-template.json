@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "PlexifyAEC Compliance Matrix Template",
+  "description": "Template for mapping regulatory requirements to documentation evidence in AEC projects",
+  "type": "object",
+  "required": ["regulationMetadata", "documentationRequirements", "aiVerification", "complianceTracking"],
+  "properties": {
+    "regulationMetadata": {
+      "type": "object",
+      "description": "Basic information about the regulation",
+      "required": ["regulationType", "regulationId", "title", "description"],
+      "properties": {
+        "regulationType": {
+          "type": "string",
+          "description": "Category of regulation (e.g., Building Code, Environmental, Safety)",
+          "examples": ["NYC Building Code", "CEQR", "OSHA", "Zoning Resolution", "ADA"]
+        },
+        "regulationId": {
+          "type": "string",
+          "description": "Unique identifier for the regulation (e.g., code section)",
+          "examples": ["R-01", "1926.501", "Chapter 33-3308"]
+        },
+        "title": {
+          "type": "string",
+          "description": "Short title of the regulation",
+          "examples": ["Duty to have fall protection", "Dust mitigation requirements"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the regulation requirements",
+          "examples": ["Requirements for fall protection in construction workplaces"]
+        },
+        "issuingAuthority": {
+          "type": "string",
+          "description": "Organization that issued the regulation",
+          "examples": ["NYC DOB", "OSHA", "NYC DCP", "EPA"]
+        },
+        "applicablePhases": {
+          "type": "array",
+          "description": "Project phases where this regulation applies",
+          "items": {
+            "type": "string",
+            "enum": ["planning", "design", "preconstruction", "construction", "closeout", "operations"]
+          }
+        },
+        "riskLevel": {
+          "type": "string",
+          "description": "Impact of non-compliance",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "regulationUrl": {
+          "type": "string",
+          "description": "Link to the official regulation text",
+          "format": "uri"
+        }
+      }
+    },
+    "documentationRequirements": {
+      "type": "array",
+      "description": "Documents required to demonstrate compliance",
+      "items": {
+        "type": "object",
+        "required": ["documentType", "required", "validationMethod"],
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "description": "Type of document required",
+            "examples": ["Safety Plan", "Permit", "Inspection Report", "Training Records"]
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether this document is mandatory"
+          },
+          "validationMethod": {
+            "type": "string",
+            "description": "How the document is validated",
+            "examples": ["AI document analysis", "Manual review", "Certificate verification"]
+          },
+          "frequency": {
+            "type": "string",
+            "description": "How often this document must be updated/verified",
+            "examples": ["Once", "Daily", "Weekly", "Monthly", "Before construction start"]
+          },
+          "retentionPeriod": {
+            "type": "string",
+            "description": "How long the document must be retained",
+            "examples": ["Project duration", "3 years", "7 years", "Permanent"]
+          },
+          "responsibleRole": {
+            "type": "string",
+            "description": "Role responsible for this document",
+            "examples": ["Safety Manager", "Project Manager", "Architect", "Engineer"]
+          },
+          "acceptanceCriteria": {
+            "type": "string",
+            "description": "Specific criteria for document acceptance",
+            "examples": ["Must be signed by licensed PE", "Must include all required sections"]
+          }
+        }
+      }
+    },
+    "aiVerification": {
+      "type": "object",
+      "description": "AI agent verification configuration",
+      "required": ["verificationPrompt", "confidenceThreshold", "extractionFields"],
+      "properties": {
+        "verificationPrompt": {
+          "type": "string",
+          "description": "Prompt for AI to verify compliance",
+          "examples": ["Analyze the safety plan for comprehensive fall protection measures including guardrail systems, safety net systems, and personal fall arrest systems for work areas with fall potential of 6 feet or more."]
+        },
+        "confidenceThreshold": {
+          "type": "number",
+          "description": "Minimum confidence score for AI verification (0.0-1.0)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.8
+        },
+        "extractionFields": {
+          "type": "array",
+          "description": "Specific data fields to extract from documents",
+          "items": {
+            "type": "object",
+            "required": ["fieldName", "dataType", "description"],
+            "properties": {
+              "fieldName": {
+                "type": "string",
+                "description": "Name of the field to extract",
+                "examples": ["permitNumber", "expirationDate", "inspectorName"]
+              },
+              "dataType": {
+                "type": "string",
+                "enum": ["string", "number", "date", "boolean", "array"]
+              },
+              "description": {
+                "type": "string",
+                "description": "Description of what this field represents"
+              },
+              "required": {
+                "type": "boolean",
+                "default": true
+              },
+              "regexPattern": {
+                "type": "string",
+                "description": "Regular expression for validation (if applicable)"
+              }
+            }
+          }
+        },
+        "agentOrchestration": {
+          "type": "array",
+          "description": "Sequence of AI agents involved in verification",
+          "items": {
+            "type": "object",
+            "properties": {
+              "agentType": {
+                "type": "string",
+                "examples": ["Document Intake", "Compliance Checker", "Report Generator"]
+              },
+              "agentRole": {
+                "type": "string",
+                "description": "Specific role in the verification process"
+              }
+            }
+          }
+        }
+      }
+    },
+    "complianceTracking": {
+      "type": "object",
+      "description": "Tracking compliance status and evidence",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["compliant", "non-compliant", "partially-compliant", "pending-verification", "not-applicable"],
+          "default": "pending-verification"
+        },
+        "lastVerifiedDate": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "verifiedBy": {
+          "type": "string",
+          "description": "User or AI agent that performed verification"
+        },
+        "evidenceLinks": {
+          "type": "array",
+          "description": "Links to evidence documents",
+          "items": {
+            "type": "object",
+            "properties": {
+              "docId": {
+                "type": "string",
+                "description": "Unique document identifier in the system"
+              },
+              "pageNumber": {
+                "type": "integer",
+                "description": "Page number (if applicable)"
+              },
+              "elementId": {
+                "type": "string",
+                "description": "Specific element ID (for BIM models)"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "nonComplianceIssues": {
+          "type": "array",
+          "description": "Details of compliance issues (if any)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "issueId": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": ["low", "medium", "high", "critical"]
+              },
+              "remediationPlan": {
+                "type": "string"
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "assignedTo": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "auditTrail": {
+          "type": "array",
+          "description": "History of compliance checks",
+          "items": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "action": {
+                "type": "string",
+                "examples": ["verification", "update", "remediation"]
+              },
+              "performedBy": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              },
+              "previousStatus": {
+                "type": "string",
+                "enum": ["compliant", "non-compliant", "partially-compliant", "pending-verification", "not-applicable"]
+              },
+              "newStatus": {
+                "type": "string",
+                "enum": ["compliant", "non-compliant", "partially-compliant", "pending-verification", "not-applicable"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "reportingConfiguration": {
+      "type": "object",
+      "description": "Configuration for how this regulation appears in reports",
+      "properties": {
+        "includeInReports": {
+          "type": "array",
+          "description": "Report types this regulation should appear in",
+          "items": {
+            "type": "string",
+            "examples": ["PM Report", "Inspection Report", "Compliance Dashboard"]
+          }
+        },
+        "displayPriority": {
+          "type": "integer",
+          "description": "Priority in report (lower numbers appear first)",
+          "minimum": 1
+        },
+        "visualIndicator": {
+          "type": "string",
+          "description": "Icon or visual indicator for reports",
+          "examples": ["🔒", "🏗️", "🔍", "⚠️"]
+        },
+        "reportSection": {
+          "type": "string",
+          "description": "Section of the report where this should appear",
+          "examples": ["Safety", "Environmental", "Zoning", "Accessibility"]
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "regulationMetadata": {
+        "regulationType": "NYC Building Code",
+        "regulationId": "R-03",
+        "title": "Chapter 33 - Safeguards During Construction",
+        "description": "Requirements for safety during construction and demolition activities",
+        "issuingAuthority": "NYC DOB",
+        "applicablePhases": ["construction"],
+        "riskLevel": "high",
+        "regulationUrl": "https://www.nyc.gov/site/buildings/codes/2014-construction-codes.page#bldgs"
+      },
+      "documentationRequirements": [
+        {
+          "documentType": "Site Safety Plan",
+          "required": true,
+          "validationMethod": "AI document analysis",
+          "frequency": "Before construction start and updated quarterly",
+          "retentionPeriod": "Project duration + 7 years",
+          "responsibleRole": "Site Safety Manager",
+          "acceptanceCriteria": "Must be signed by licensed Site Safety Manager and include all required sections per §3303"
+        },
+        {
+          "documentType": "Daily Inspection Reports",
+          "required": true,
+          "validationMethod": "AI inspection analysis",
+          "frequency": "Daily",
+          "retentionPeriod": "Project duration + 3 years",
+          "responsibleRole": "Site Safety Manager",
+          "acceptanceCriteria": "Must include all required inspections per §3301"
+        }
+      ],
+      "aiVerification": {
+        "verificationPrompt": "Analyze the Site Safety Plan for compliance with NYC Building Code Chapter 33. Verify it includes fall protection measures, debris containment, public protection, and is signed by a licensed Site Safety Manager.",
+        "confidenceThreshold": 0.85,
+        "extractionFields": [
+          {
+            "fieldName": "siteManagerName",
+            "dataType": "string",
+            "description": "Name of the Site Safety Manager",
+            "required": true
+          },
+          {
+            "fieldName": "licenseNumber",
+            "dataType": "string",
+            "description": "Site Safety Manager license number",
+            "required": true,
+            "regexPattern": "^SSM-\\d{6}$"
+          }
+        ],
+        "agentOrchestration": [
+          {
+            "agentType": "Document Intake",
+            "agentRole": "Classify and extract metadata"
+          },
+          {
+            "agentType": "Compliance Checker",
+            "agentRole": "Verify Chapter 33 requirements"
+          }
+        ]
+      },
+      "complianceTracking": {
+        "status": "pending-verification",
+        "evidenceLinks": [],
+        "nonComplianceIssues": [],
+        "auditTrail": []
+      },
+      "reportingConfiguration": {
+        "includeInReports": ["Inspection Report", "PM Report", "Compliance Dashboard"],
+        "displayPriority": 1,
+        "visualIndicator": "🏗️",
+        "reportSection": "Safety"
+      }
+    }
+  ]
+}

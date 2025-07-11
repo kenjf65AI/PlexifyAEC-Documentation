@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "regulationMetadata": {
+    "regulationType": "NYC Building Code",
+    "regulationId": "R-03",
+    "title": "Chapter 33 - Safeguards During Construction",
+    "description": "Requirements for safety during construction and demolition activities in New York City, including site safety plans, fall protection, public protection, and demolition safety.",
+    "issuingAuthority": "NYC Department of Buildings (DOB)",
+    "applicablePhases": ["preconstruction", "construction"],
+    "riskLevel": "high",
+    "regulationUrl": "https://www.nyc.gov/site/buildings/codes/2014-construction-codes.page#bldgs"
+  },
+  "documentationRequirements": [
+    {
+      "documentType": "Site Safety Plan",
+      "required": true,
+      "validationMethod": "AI document analysis",
+      "frequency": "Before construction start and updated quarterly",
+      "retentionPeriod": "Project duration + 7 years",
+      "responsibleRole": "Site Safety Manager",
+      "acceptanceCriteria": "Must be signed by licensed Site Safety Manager and include all required sections per §3303"
+    },
+    {
+      "documentType": "Daily Inspection Reports",
+      "required": true,
+      "validationMethod": "AI inspection analysis",
+      "frequency": "Daily",
+      "retentionPeriod": "Project duration + 3 years",
+      "responsibleRole": "Site Safety Manager",
+      "acceptanceCriteria": "Must include all required inspections per §3301.7"
+    },
+    {
+      "documentType": "Fall Protection Documentation",
+      "required": true,
+      "validationMethod": "AI document analysis + photo verification",
+      "frequency": "Before work at heights begins, updated when conditions change",
+      "retentionPeriod": "Project duration + 3 years",
+      "responsibleRole": "Site Safety Manager",
+      "acceptanceCriteria": "Must detail guardrail systems, safety nets, or personal fall arrest systems per §3308"
+    },
+    {
+      "documentType": "Sidewalk Shed Permits",
+      "required": true,
+      "validationMethod": "Permit verification",
+      "frequency": "Before installation, renewed as required",
+      "retentionPeriod": "Project duration + 3 years",
+      "responsibleRole": "General Contractor",
+      "acceptanceCriteria": "Valid DOB permits for all sidewalk sheds per §3307.6"
+    },
+    {
+      "documentType": "Construction Fence Specifications",
+      "required": true,
+      "validationMethod": "AI document analysis",
+      "frequency": "Before site preparation",
+      "retentionPeriod": "Project duration",
+      "responsibleRole": "General Contractor",
+      "acceptanceCriteria": "Must meet height and material requirements per §3307.7"
+    },
+    {
+      "documentType": "Crane and Derrick Notice",
+      "required": true,
+      "validationMethod": "AI document analysis",
+      "frequency": "Before crane operations",
+      "retentionPeriod": "Project duration + 3 years",
+      "responsibleRole": "Hoisting Equipment Director",
+      "acceptanceCriteria": "CN filing with DOB per §3319.3"
+    }
+  ],
+  "aiVerification": {
+    "verificationPrompt": "Analyze the Site Safety Plan for compliance with NYC Building Code Chapter 33. Verify it includes fall protection measures, debris containment, public protection, and is signed by a licensed Site Safety Manager.",
+    "confidenceThreshold": 0.85,
+    "extractionFields": [
+      {
+        "fieldName": "siteManagerName",
+        "dataType": "string",
+        "description": "Name of the Site Safety Manager",
+        "required": true
+      },
+      {
+        "fieldName": "licenseNumber",
+        "dataType": "string",
+        "description": "Site Safety Manager license number",
+        "required": true,
+        "regexPattern": "^SSM-\\d{6}$"
+      },
+      {
+        "fieldName": "fallProtectionMeasures",
+        "dataType": "array",
+        "description": "List of fall protection measures implemented",
+        "required": true
+      },
+      {
+        "fieldName": "publicProtectionMeasures",
+        "dataType": "array",
+        "description": "List of public protection measures implemented",
+        "required": true
+      },
+      {
+        "fieldName": "inspectionSchedule",
+        "dataType": "object",
+        "description": "Schedule of safety inspections",
+        "required": true
+      }
+    ],
+    "agentOrchestration": [
+      {
+        "agentType": "Document Intake",
+        "agentRole": "Classify and extract metadata"
+      },
+      {
+        "agentType": "Trust-Oriented Lead",
+        "agentRole": "Verify Chapter 33 compliance"
+      },
+      {
+        "agentType": "Image Analysis",
+        "agentRole": "Verify photo evidence of safety measures"
+      },
+      {
+        "agentType": "Report Generator",
+        "agentRole": "Compile inspection reports"
+      }
+    ]
+  },
+  "complianceTracking": {
+    "status": "pending-verification",
+    "lastVerifiedDate": null,
+    "verifiedBy": null,
+    "evidenceLinks": [],
+    "nonComplianceIssues": [],
+    "auditTrail": []
+  },
+  "reportingConfiguration": {
+    "includeInReports": ["Inspection Report", "PM Report", "Compliance Dashboard"],
+    "displayPriority": 1,
+    "visualIndicator": "🏗️",
+    "reportSection": "Safety",
+    "subsections": [
+      {
+        "code": "§3301",
+        "title": "General Provisions",
+        "priority": 1
+      },
+      {
+        "code": "§3303",
+        "title": "Site Safety Plan",
+        "priority": 2
+      },
+      {
+        "code": "§3307",
+        "title": "Protection of Pedestrians",
+        "priority": 3
+      },
+      {
+        "code": "§3308",
+        "title": "Fall Protection",
+        "priority": 4
+      },
+      {
+        "code": "§3310",
+        "title": "Containers",
+        "priority": 5
+      },
+      {
+        "code": "§3319",
+        "title": "Cranes and Derricks",
+        "priority": 6
+      }
+    ]
+  },
+  "specificRequirements": [
+    {
+      "section": "§3301.7",
+      "title": "Daily Inspections",
+      "description": "Site safety inspections must be performed daily and documented",
+      "documentationRequired": "Daily Inspection Reports",
+      "aiVerificationMethod": "OCR extraction of dates, signatures, and inspection items"
+    },
+    {
+      "section": "§3303.10",
+      "title": "Site Safety Plan",
+      "description": "Comprehensive safety plan required for major buildings",
+      "documentationRequired": "Site Safety Plan",
+      "aiVerificationMethod": "NLP analysis of plan components against checklist"
+    },
+    {
+      "section": "§3308.6",
+      "title": "Fall Protection",
+      "description": "Protection required for workers exposed to falls of 6 feet or greater",
+      "documentationRequired": "Fall Protection Documentation",
+      "aiVerificationMethod": "Image analysis of safety measures + document verification"
+    },
+    {
+      "section": "§3307.6",
+      "title": "Sidewalk Sheds",
+      "description": "Required when work is conducted at heights above 40 feet",
+      "documentationRequired": "Sidewalk Shed Permits",
+      "aiVerificationMethod": "Permit validation + image analysis"
+    }
+  ],
+  "demoHighlights": {
+    "mainFocus": "§3308 - Fall Protection",
+    "secondaryFocus": "§3307 - Public Protection",
+    "visualizationPriority": "Safety compliance score with drill-down capability",
+    "evidenceExample": "Photo documentation of fall protection systems with BIM location markers",
+    "nonComplianceScenario": "Missing fall protection training for two subcontractors"
+  }
+}
