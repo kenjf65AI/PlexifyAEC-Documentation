@@ -1,16 +1,13 @@
 import React from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Chip, 
-  Grid, 
-  Divider, 
-  /* Tooltip – not used here, remove import */ 
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  Grid,
   Alert,
-  useTheme,
-  /* LinearProgress – not used here, remove import */
+  useTheme
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';

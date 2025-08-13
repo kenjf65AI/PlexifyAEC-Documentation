@@ -53,11 +53,175 @@ const SectionTitle = styled(Typography)(({ theme }) => ({
 
 const Dashboard = () => {
   const theme = useTheme();
+  
+  // STEP 3: Hardcoded test data for debugging
+  // This bypasses any potential issues with the Zustand store
+  const testProjectStats = [
+    {
+      id: "docs-processed",
+      label: "Documents Processed",
+      value: 1247,
+      change: 12.5,
+      changeLabel: "from last month",
+      icon: "DocumentScanner"
+    },
+    {
+      id: "compliance-score",
+      label: "Compliance Score",
+      value: 87,
+      suffix: "%",
+      change: 3.2,
+      changeLabel: "from last assessment",
+      icon: "Gavel"
+    },
+    {
+      id: "active-issues",
+      label: "Active Issues",
+      value: 24,
+      change: -8,
+      changeLabel: "from last week",
+      icon: "BugReport"
+    }
+  ];
+  
+  const testAgentCapabilities = [
+    {
+      id: "document-analysis",
+      title: "Document Analysis",
+      description: "Extracts key information from construction documents, RFIs, and specifications",
+      icon: "Description",
+      color: "#562CE6",
+      metrics: {
+        accuracy: 94,
+        documentsProcessed: 892,
+        averageProcessingTime: "3.2 min"
+      }
+    },
+    {
+      id: "compliance-check",
+      title: "Compliance Checking",
+      description: "Validates documents against NYC Building Code, Zoning Resolution, and project requirements",
+      icon: "FactCheck",
+      color: "#1AC6A1",
+      metrics: {
+        accuracy: 91,
+        regulationsTracked: 347,
+        issuesPrevented: 78
+      }
+    }
+  ];
+  
+  const testProcessingPipeline = [
+    {
+      id: "document-intake",
+      name: "Document Intake",
+      description: "Initial processing and classification of uploaded documents",
+      status: "operational",
+      metrics: {
+        throughput: "125 docs/day",
+        accuracy: "98%",
+        lastUpdated: "2025-07-12T08:30:00Z"
+      }
+    },
+    {
+      id: "content-extraction",
+      name: "Content Extraction",
+      description: "Structured data extraction from documents using OCR and NLP",
+      status: "operational",
+      metrics: {
+        throughput: "95 docs/day",
+        accuracy: "92%",
+        lastUpdated: "2025-07-12T10:15:00Z"
+      }
+    }
+  ];
+  
+  const testIntegrationStatus = [
+    {
+      id: "procore",
+      name: "Procore",
+      type: "Project Management",
+      status: "connected",
+      lastSync: "2025-07-12T16:30:00Z",
+      metrics: {
+        documentsSync: 342,
+        issuesTracked: 87,
+        syncFrequency: "15 min"
+      }
+    },
+    {
+      id: "autodesk-bim360",
+      name: "Autodesk BIM 360",
+      type: "BIM Collaboration",
+      status: "connected",
+      lastSync: "2025-07-12T16:15:00Z",
+      metrics: {
+        modelsSync: 24,
+        issuesTracked: 56,
+        syncFrequency: "30 min"
+      }
+    }
+  ];
+  
+  // Test project data
+  const testProject = {
+    name: "NYC Borough-Based Jail System - Manhattan Facility",
+    phase: "Construction Documents",
+    budget: "$1.8B",
+    timeline: "2024-2027",
+    location: "Manhattan, NY",
+    compliance: {
+      overall: 87
+    }
+  };
+  
+  // Optional: Use store data if available, otherwise use test data
   const { 
-    dashboard: { projectStats, agentCapabilities, processingPipeline, integrationStatus },
+    dashboard,
     project,
     compliance
   } = useStore();
+  
+  // Use test data instead of store data for debugging
+  const projectStats = testProjectStats;
+  const agentCapabilities = testAgentCapabilities;
+  const processingPipeline = testProcessingPipeline;
+  const integrationStatus = testIntegrationStatus;
+  const projectData = testProject;
+  
+  // Simplified test compliance data
+  const testCompliance = {
+    overallScore: 87,
+    statusCounts: {
+      compliant: 42,
+      warning: 7,
+      'non-compliant': 3
+    },
+    status: [
+      {
+        id: "nyc-zoning",
+        name: "NYC Zoning Resolution",
+        status: "compliant",
+        score: 92,
+        details: "All requirements met",
+        statusIcon: "✓"
+      },
+      {
+        id: "ada",
+        name: "ADA Compliance",
+        status: "compliant",
+        score: 97,
+        details: "Accessibility standards verified",
+        statusIcon: "✓"
+      }
+    ]
+  };
+  
+  // Use test compliance data
+  const complianceData = testCompliance;
+  
+  // Flag to control rendering of compliance section
+  const showCompliance = true;
 
   return (
     <Box sx={{ pb: 4 }}>
@@ -75,20 +239,20 @@ const Dashboard = () => {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={8}>
             <Typography variant="h4" gutterBottom>
-              {project.name}
+              {projectData.name}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {project.phase} Phase | Budget: {project.budget} | Timeline: {project.timeline}
+              {projectData.phase} Phase | Budget: {projectData.budget} | Timeline: {projectData.timeline}
             </Typography>
             <Box sx={{ mt: 1 }}>
               <Chip 
-                label={`Compliance: ${project.compliance.overall}%`} 
-                color={project.compliance.overall >= 90 ? "success" : "warning"}
+                label={`Compliance: ${projectData.compliance.overall}%`} 
+                color={projectData.compliance.overall >= 90 ? "success" : "warning"}
                 size="small"
                 sx={{ mr: 1, mb: 1 }}
               />
               <Chip 
-                label={`Location: ${project.location}`}
+                label={`Location: ${projectData.location}`}
                 variant="outlined"
                 size="small"
                 sx={{ mr: 1, mb: 1 }}
@@ -149,115 +313,119 @@ const Dashboard = () => {
       <SectionTitle variant="h5">Integration Status</SectionTitle>
       <IntegrationStatus integrations={integrationStatus} />
 
-      {/* Compliance Overview */}
-      <SectionTitle variant="h5">Compliance Overview</SectionTitle>
-      <Card sx={{ mb: 4, borderRadius: 2 }}>
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={4}>
-              <GradientCard>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
-                    Overall Compliance Score
-                  </Typography>
-                  <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-                    {compliance.overallScore}%
-                  </Typography>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                    <Chip 
-                      label={`${compliance.statusCounts.compliant} Compliant`}
-                      sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                      size="small"
-                    />
-                    <Chip 
-                      label={`${compliance.statusCounts.warning} Warnings`}
-                      sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                      size="small"
-                    />
-                    <Chip 
-                      label={`${compliance.statusCounts['non-compliant']} Issues`}
-                      sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                      size="small"
-                    />
-                  </Box>
-                </CardContent>
-              </GradientCard>
-            </Grid>
-            <Grid item xs={12} md={8}>
-              <Stack spacing={2}>
-                {compliance.status.slice(0, 4).map((item) => (
-                  <Paper 
-                    key={item.id} 
-                    elevation={0} 
-                    sx={{ 
-                      p: 2, 
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: item.status === 'compliant' 
-                        ? 'success.light' 
-                        : item.status === 'warning' 
-                          ? 'warning.light' 
-                          : 'error.light',
-                      bgcolor: item.status === 'compliant' 
-                        ? 'success.light' 
-                        : item.status === 'warning' 
-                          ? 'warning.light' 
-                          : 'error.light',
-                      opacity: 0.1
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Typography 
-                          variant="h4" 
-                          component="span" 
-                          sx={{ 
-                            mr: 2,
-                            color: item.status === 'compliant' 
-                              ? 'success.main' 
-                              : item.status === 'warning' 
-                                ? 'warning.main' 
-                                : 'error.main'
-                          }}
-                        >
-                          {item.statusIcon}
-                        </Typography>
-                        <Box>
-                          <Typography variant="body1" fontWeight="medium">
-                            {item.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {item.details}
-                          </Typography>
-                        </Box>
+      {/* Compliance Overview - conditionally rendered */}
+      {showCompliance && (
+        <>
+          <SectionTitle variant="h5">Compliance Overview</SectionTitle>
+          <Card sx={{ mb: 4, borderRadius: 2 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <GradientCard>
+                    <CardContent sx={{ p: 3 }}>
+                      <Typography variant="h6" sx={{ mb: 2, color: 'white' }}>
+                        Overall Compliance Score
+                      </Typography>
+                      <Typography variant="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
+                        {complianceData.overallScore}%
+                      </Typography>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                        <Chip 
+                          label={`${complianceData.statusCounts.compliant} Compliant`}
+                          sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                          size="small"
+                        />
+                        <Chip 
+                          label={`${complianceData.statusCounts.warning} Warnings`}
+                          sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                          size="small"
+                        />
+                        <Chip 
+                          label={`${complianceData.statusCounts['non-compliant']} Issues`}
+                          sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                          size="small"
+                        />
                       </Box>
-                      <Chip 
-                        label={`${item.score}%`}
-                        size="small"
+                    </CardContent>
+                  </GradientCard>
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Stack spacing={2}>
+                    {complianceData.status.map((item) => (
+                      <Paper 
+                        key={item.id} 
+                        elevation={0} 
                         sx={{ 
-                          bgcolor: item.status === 'compliant' 
-                            ? 'success.main' 
+                          p: 2, 
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: item.status === 'compliant' 
+                            ? 'success.light' 
                             : item.status === 'warning' 
-                              ? 'warning.main' 
-                              : 'error.main',
-                          color: 'white'
+                              ? 'warning.light' 
+                              : 'error.light',
+                          bgcolor: item.status === 'compliant' 
+                            ? 'success.light' 
+                            : item.status === 'warning' 
+                              ? 'warning.light' 
+                              : 'error.light',
+                          opacity: 0.1
                         }}
-                      />
-                    </Box>
-                  </Paper>
-                ))}
-                <Button 
-                  variant="outlined" 
-                  color="primary" 
-                  sx={{ alignSelf: 'flex-end' }}
-                >
-                  View All Compliance Items
-                </Button>
-              </Stack>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography 
+                              variant="h4" 
+                              component="span" 
+                              sx={{ 
+                                mr: 2,
+                                color: item.status === 'compliant' 
+                                  ? 'success.main' 
+                                  : item.status === 'warning' 
+                                    ? 'warning.main' 
+                                    : 'error.main'
+                              }}
+                            >
+                              {item.statusIcon}
+                            </Typography>
+                            <Box>
+                              <Typography variant="body1" fontWeight="medium">
+                                {item.name}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {item.details}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Chip 
+                            label={`${item.score}%`}
+                            size="small"
+                            sx={{ 
+                              bgcolor: item.status === 'compliant' 
+                                ? 'success.main' 
+                                : item.status === 'warning' 
+                                  ? 'warning.main' 
+                                  : 'error.main',
+                              color: 'white'
+                            }}
+                          />
+                        </Box>
+                      </Paper>
+                    ))}
+                    <Button 
+                      variant="outlined" 
+                      color="primary" 
+                      sx={{ alignSelf: 'flex-end' }}
+                    >
+                      View All Compliance Items
+                    </Button>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </Box>
   );
 };

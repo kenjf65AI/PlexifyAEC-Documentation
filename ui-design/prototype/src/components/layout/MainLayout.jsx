@@ -71,8 +71,8 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 const Logo = styled('img')({
-  height: 40,
-  marginRight: 16,
+  height: 60,          // Increased logo height to 60px
+  marginRight: 12,     // Slightly adjusted spacing
 });
 
 const MainLayout = ({ children }) => {
@@ -94,7 +94,7 @@ const MainLayout = ({ children }) => {
   const drawer = (
     <>
       <DrawerHeader>
-        <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, ml: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, ml: 1 }}>
           <Logo src={plexifyLogo} alt="PlexifyAEC Logo" />
           <Typography variant="h6" noWrap component="div" color="primary.light">
             PlexifyAEC
@@ -141,8 +141,22 @@ const MainLayout = ({ children }) => {
         })}
       </List>
       <Divider />
-      <Box sx={{ p: 2 }}>
-        <Typography variant="caption" color="text.secondary">
+      {/* Bottom-sidebar logo + captions */}
+      <Box sx={{ p: 1, textAlign: 'center', mt: 'auto' }}>
+        {/* Logo at the bottom - 4× larger (192px) */}
+        <Box sx={{ mb: 1 }}>
+          <img
+            src={plexifyLogo}
+            alt="PlexifyAEC Logo"
+            style={{ 
+              height: '192px',          /* 4× larger explicit height */
+              width: 'auto',
+              border: '2px solid rgba(255,255,255,0.15)', /* subtle border to stand out */
+              borderRadius: 4
+            }}
+          />
+        </Box>
+        <Typography variant="caption" color="text.secondary" display="block">
           NYC Borough-Based Jail System
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
@@ -181,6 +195,8 @@ const MainLayout = ({ children }) => {
           '& .MuiDrawer-paper': {
             width: drawerWidth,
             boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column'
           },
         }}
         variant={isMobile ? "temporary" : "persistent"}
