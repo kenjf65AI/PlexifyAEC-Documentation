@@ -1,0 +1,895 @@
+openapi: 3.0.3
+info:
+  title: PlexifyAEC API
+  description: |
+    API for PlexifyAEC - AI-powered construction management platform with document intake, 
+    compliance checks, and report generation capabilities. This specification focuses on 
+    integration endpoints (including SharePoint) and evidence access.
+  version: 1.0.0
+  contact:
+    name: PlexifyAEC Engineering
+    email: api@plexifyaec.com
+  license:
+    name: Proprietary
+servers:
+  - url: https://api.plexifyaec.com/v1
+    description: Production API
+  - url: https://api-staging.plexifyaec.com/v1
+    description: Staging API
+  - url: https://api-dev.plexifyaec.com/v1
+    description: Development API
+
+tags:
+  - name: Authentication
+    description: Authentication and authorization endpoints
+  - name: Documents
+    description: Document management operations
+  - name: Evidence
+    description: Evidence access and verification
+  - name: SharePoint
+    description: Microsoft SharePoint integration endpoints
+  - name: Integrations
+    description: Common integration endpoints for all connectors
+  - name: Projects
+    description: Project management operations
+
+paths:
+  # Authentication Endpoints
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate a user and receive JWT tokens
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Successfully refreshed tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokens'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # SharePoint Integration Endpoints
+  /integrations/sharepoint/status:
+    get:
+      tags:
+        - SharePoint
+      summary: Get SharePoint connection status and sync statistics
+      operationId: getSharePointStatus
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Connection status and statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharePointStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /integrations/sharepoint/connect:
+    post:
+      tags:
+        - SharePoint
+      summary: Initiate OAuth flow to connect to SharePoint
+      operationId: connectSharePoint
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirectUri:
+                  type: string
+                  format: uri
+                  description: URI to redirect after successful OAuth flow
+      responses:
+        '200':
+          description: OAuth initiation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: URL to redirect user for Microsoft authentication
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /integrations/sharepoint/webhook:
+    post:
+      tags:
+        - SharePoint
+      summary: Webhook endpoint for Microsoft Graph change notifications
+      operationId: sharePointWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/WebhookValidation'
+                - $ref: '#/components/schemas/WebhookNotification'
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+
+  # Project-specific SharePoint Endpoints
+  /projects/{projectId}/sharepoint/items:
+    get:
+      tags:
+        - SharePoint
+        - Documents
+      summary: List SharePoint items for a project
+      operationId: listSharePointItems
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: parentId
+          in: query
+          description: ID of the parent folder (optional)
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search term for filtering items
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Pagination'
+      responses:
+        '200':
+          description: List of SharePoint items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SharePointItem'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{projectId}/sharepoint/items/{itemId}/download:
+    post:
+      tags:
+        - SharePoint
+        - Documents
+      summary: Get a signed URL to download a SharePoint item
+      operationId: downloadSharePointItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: itemId
+          in: path
+          required: true
+          description: SharePoint item ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signed download URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  downloadUrl:
+                    type: string
+                    format: uri
+                    description: Signed URL for downloading the item
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    description: Expiration time of the signed URL
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{projectId}/sharepoint/items/{itemId}:
+    patch:
+      tags:
+        - SharePoint
+        - Documents
+      summary: Update metadata/tags for a SharePoint item
+      operationId: updateSharePointItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: itemId
+          in: path
+          required: true
+          description: SharePoint item ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  additionalProperties: true
+                  description: Metadata key-value pairs
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags associated with the item
+      responses:
+        '200':
+          description: Item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharePointItem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    
+    delete:
+      tags:
+        - SharePoint
+        - Documents
+      summary: Delete or recycle a SharePoint item
+      operationId: deleteSharePointItem
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: itemId
+          in: path
+          required: true
+          description: SharePoint item ID
+          schema:
+            type: string
+        - name: permanent
+          in: query
+          description: Whether to permanently delete the item (default is false, which moves to recycle bin)
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '204':
+          description: Item deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Evidence Access Endpoints
+  /evidence/{evidenceId}:
+    get:
+      tags:
+        - Evidence
+      summary: Get evidence by ID with proper authorization
+      operationId: getEvidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: evidenceId
+          in: path
+          required: true
+          description: Evidence ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Evidence details with signed URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Document Operations Endpoints
+  /projects/{projectId}/documents:
+    get:
+      tags:
+        - Documents
+        - Projects
+      summary: List documents for a project
+      operationId: listDocuments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: type
+          in: query
+          description: Filter by document type
+          schema:
+            type: string
+            enum: [bim, rfi, schedule, permit, safety, environmental]
+        - name: status
+          in: query
+          description: Filter by document status
+          schema:
+            type: string
+            enum: [draft, submitted, approved, rejected]
+        - $ref: '#/components/parameters/Pagination'
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Documents
+        - Projects
+      summary: Upload a new document to a project
+      operationId: uploadDocument
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file to upload
+                type:
+                  type: string
+                  enum: [bim, rfi, schedule, permit, safety, environmental]
+                  description: Document type
+                metadata:
+                  type: object
+                  additionalProperties: true
+                  description: Metadata key-value pairs
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{projectId}/documents/{documentId}:
+    get:
+      tags:
+        - Documents
+        - Projects
+      summary: Get document details by ID
+      operationId: getDocument
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: documentId
+          in: path
+          required: true
+          description: Document ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login or /auth/refresh
+
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      description: Project ID
+      schema:
+        type: string
+        format: uuid
+    
+    Pagination:
+      name: page
+      in: query
+      description: Page number for pagination (starts at 1)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    AuthTokens:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token
+        refreshToken:
+          type: string
+          description: JWT refresh token
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+        tokenType:
+          type: string
+          enum: [Bearer]
+          default: Bearer
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          description: Additional error details
+
+    SharePointStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [connected, disconnected, degraded]
+          description: Current connection status
+        lastSyncTime:
+          type: string
+          format: date-time
+          description: Last successful sync time
+        syncStats:
+          type: object
+          properties:
+            totalItems:
+              type: integer
+              description: Total number of items synced
+            pendingItems:
+              type: integer
+              description: Number of items pending sync
+            errorItems:
+              type: integer
+              description: Number of items with sync errors
+        tenant:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Microsoft tenant ID
+            name:
+              type: string
+              description: Tenant name
+        sites:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Site ID
+              name:
+                type: string
+                description: Site name
+              url:
+                type: string
+                format: uri
+                description: Site URL
+              drives:
+                type: integer
+                description: Number of drives in the site
+
+    SharePointItem:
+      type: object
+      required:
+        - id
+        - name
+        - driveId
+        - siteId
+      properties:
+        id:
+          type: string
+          description: SharePoint item ID
+        name:
+          type: string
+          description: Item name
+        driveId:
+          type: string
+          description: Drive ID
+        siteId:
+          type: string
+          description: Site ID
+        parentId:
+          type: string
+          description: Parent folder ID
+        webUrl:
+          type: string
+          format: uri
+          description: Web URL to the item
+        size:
+          type: integer
+          description: Item size in bytes
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation time
+        modifiedAt:
+          type: string
+          format: date-time
+          description: Last modification time
+        createdBy:
+          type: string
+          description: Creator name
+        modifiedBy:
+          type: string
+          description: Last modifier name
+        mimeType:
+          type: string
+          description: MIME type
+        isFolder:
+          type: boolean
+          description: Whether the item is a folder
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Custom metadata
+        tags:
+          type: array
+          items:
+            type: string
+          description: Item tags
+        versions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Version ID
+              modifiedAt:
+                type: string
+                format: date-time
+                description: Version modification time
+              size:
+                type: integer
+                description: Version size in bytes
+
+    WebhookValidation:
+      type: object
+      required:
+        - validationToken
+      properties:
+        validationToken:
+          type: string
+          description: Validation token sent by Microsoft Graph
+
+    WebhookNotification:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: array
+          items:
+            type: object
+            required:
+              - subscriptionId
+              - changeType
+              - resource
+            properties:
+              subscriptionId:
+                type: string
+                description: Subscription ID
+              changeType:
+                type: string
+                description: Type of change (created, updated, deleted)
+              resource:
+                type: string
+                description: Resource that changed
+              clientState:
+                type: string
+                description: Client state for validation
+
+    Evidence:
+      type: object
+      required:
+        - id
+        - documentId
+        - type
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Evidence ID
+        documentId:
+          type: string
+          format: uuid
+          description: Source document ID
+        type:
+          type: string
+          enum: [document, image, bim-snapshot, report-section]
+          description: Evidence type
+        title:
+          type: string
+          description: Evidence title
+        description:
+          type: string
+          description: Evidence description
+        regulationId:
+          type: string
+          description: Related regulation ID
+        downloadUrl:
+          type: string
+          format: uri
+          description: Signed URL for downloading the evidence
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration time of the signed URL
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metadata
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation time
+        createdBy:
+          type: string
+          description: Creator ID or name
+
+    Document:
+      type: object
+      required:
+        - id
+        - projectId
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Document ID
+        projectId:
+          type: string
+          format: uuid
+          description: Project ID
+        name:
+          type: string
+          description: Document name
+        type:
+          type: string
+          enum: [bim, rfi, schedule, permit, safety, environmental]
+          description: Document type
+        status:
+          type: string
+          enum: [draft, submitted, approved, rejected]
+          description: Document status
+        version:
+          type: string
+          description: Document version
+        size:
+          type: integer
+          description: Document size in bytes
+        mimeType:
+          type: string
+          description: MIME type
+        sourceSystem:
+          type: string
+          enum: [sharepoint, acc, procore, p6, bluebeam, internal]
+          description: Source system
+        sourceId:
+          type: string
+          description: ID in the source system
+        downloadUrl:
+          type: string
+          format: uri
+          description: Signed URL for downloading the document
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metadata
+        tags:
+          type: array
+          items:
+            type: string
+          description: Document tags
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation time
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update time
+        createdBy:
+          type: string
+          description: Creator ID or name
+        updatedBy:
+          type: string
+          description: Last updater ID or name
+
+    PaginationInfo:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          description: Total number of items
+        totalPages:
+          type: integer
+          description: Total number of pages
+        currentPage:
+          type: integer
+          description: Current page number
+        itemsPerPage:
+          type: integer
+          description: Number of items per page

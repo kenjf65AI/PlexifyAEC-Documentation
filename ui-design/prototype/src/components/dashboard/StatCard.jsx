@@ -9,7 +9,22 @@ import {
 } from '@mui/material';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import * as Icons from '@mui/icons-material';
+
+/* ------------------------------------------------------------------ *
+ *  Only import the specific icons the dashboard uses instead of      *
+ *  relying on a large dynamic import that breaks tree-shaking and    *
+ *  can fail at runtime ( Icons[icon] will be undefined if the icon   *
+ *  name isn’t exported).                                             *
+ * ------------------------------------------------------------------ */
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import GavelIcon from '@mui/icons-material/Gavel';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import SpeedIcon from '@mui/icons-material/Speed';
+import DescriptionIcon from '@mui/icons-material/Description';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 
 const StatCard = ({ 
   label, 
@@ -27,8 +42,20 @@ const StatCard = ({
   const changeColor = isPositive ? theme.palette.success.main : theme.palette.error.main;
   const ChangeIcon = isPositive ? ArrowUpwardIcon : ArrowDownwardIcon;
   
-  // Dynamically import icon from Material UI
-  const IconComponent = Icons[icon] || Icons.Assessment;
+  // Explicit icon map to avoid dynamic imports
+  const iconMap = {
+    DocumentScanner: DocumentScannerIcon,
+    Gavel: GavelIcon,
+    BugReport: BugReportIcon,
+    Speed: SpeedIcon,
+    Description: DescriptionIcon,
+    FactCheck: FactCheckIcon,
+    Schedule: ScheduleIcon,
+    AttachMoney: AttachMoneyIcon,
+    Assessment: AssessmentIcon
+  };
+
+  const IconComponent = iconMap[icon] || AssessmentIcon;
 
   return (
     <Card 

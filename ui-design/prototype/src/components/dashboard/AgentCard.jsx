@@ -10,7 +10,12 @@ import {
   useTheme,
   Grid
 } from '@mui/material';
-import * as Icons from '@mui/icons-material';
+// Explicit icon imports to avoid runtime failures with dynamic lookup
+import DescriptionIcon from '@mui/icons-material/Description';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import ScheduleIcon from '@mui/icons-material/Schedule';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 const AgentCard = ({ 
   title, 
@@ -22,8 +27,16 @@ const AgentCard = ({
 }) => {
   const theme = useTheme();
   
-  // Dynamically import icon from Material UI
-  const IconComponent = Icons[icon] || Icons.SmartToy;
+  // Map supported icon names to their components
+  const iconMap = {
+    Description: DescriptionIcon,
+    FactCheck:   FactCheckIcon,
+    Schedule:    ScheduleIcon,
+    AttachMoney: AttachMoneyIcon,
+    SmartToy:    SmartToyIcon
+  };
+
+  const IconComponent = iconMap[icon] || SmartToyIcon;
 
   return (
     <Card 
